@@ -1,0 +1,17 @@
+{
+  "name": "jobsapi-integration-platform",
+  "version": "1.0.0",
+  "description": "Unified Job Search & Application Automation Platform (Consolidated 2-App Architecture)",
+  "private": true,
+  "scripts": {
+    "start:backend": "npm --prefix backend run dev",
+    "start:frontend": "npm --prefix frontend run dev",
+    "build:frontend": "npm --prefix frontend run build",
+    "lint:frontend": "npm --prefix frontend run lint",
+    "test:backend": "npm --prefix backend test",
+    "test": "npm --prefix backend test && npm --prefix frontend run lint && npm --prefix frontend run build",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:build": "docker compose build"
+  }
+}

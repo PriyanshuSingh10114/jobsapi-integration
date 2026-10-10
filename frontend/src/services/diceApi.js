@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const DICE_BASE_URL = import.meta.env.VITE_DICE_API_BASE_URL || 'http://localhost:8000';
+const DICE_BASE_URL = import.meta.env.VITE_DICE_API_BASE_URL || 'http://localhost:5000/api/dice';
 
 const diceClient = axios.create({
   baseURL: DICE_BASE_URL,

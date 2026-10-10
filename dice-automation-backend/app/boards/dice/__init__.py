@@ -1,1 +1,0 @@
-# Dice board plugin package

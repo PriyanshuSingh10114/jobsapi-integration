@@ -1,1 +1,0 @@
-# Job boards plugin package

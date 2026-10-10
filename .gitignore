@@ -52,10 +52,9 @@ htmlcov/
 # 6. Browser & Automation Profile Data
 data/browser_profiles/
 data/browser_profile/
-dice-automation-backend/data/
-dice-automation-backend/resumes/*
-!dice-automation-backend/resumes/.gitkeep
-!dice-automation-backend/sample_resumes/
+data/dice_cookies.json
+backend/uploads/resumes/*
+!backend/uploads/resumes/.gitkeep
 
 # 7. OS & IDE Specific
 .DS_Store

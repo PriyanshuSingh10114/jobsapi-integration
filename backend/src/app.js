@@ -72,6 +72,7 @@ const userRoutes = require('./routes/userRoutes');
 const candidateRoutes = require('./routes/candidate.routes');
 const discoveryRoutes = require('./routes/discoveryRoutes');
 const autoApplyRoutes = require('./routes/autoApplyRoutes');
+const diceRoutes = require('./routes/diceRoutes');
 
 // Serve uploads folder statically with secure cache headers
 app.use('/uploads', express.static('uploads', {
@@ -93,6 +94,8 @@ app.use('/api/candidate', candidateRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/discovery', discoveryRoutes);
 app.use('/api/auto-apply', autoApplyRoutes);
+app.use('/api/dice', diceRoutes);
+app.use('/api', diceRoutes);
 
 
 // Swagger UI Documentation

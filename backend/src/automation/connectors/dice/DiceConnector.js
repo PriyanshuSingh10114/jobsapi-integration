@@ -10,9 +10,8 @@ const ValidationEngine = require('../../engine/ValidationEngine');
  * 
  * ARCHITECTURAL NOTICE:
  * This connector provides standard ATS interface compliance for generic Dice job URLs within
- * the Node.js BullMQ worker pipeline. For advanced, dedicated Dice session management,
- * multi-step application wizards, and CAPTCHA challenge resolution, the monorepo provides
- * the specialized Python engine in `dice-automation-backend/` (FastAPI + DiceBoard.py).
+ * the Node.js BullMQ worker pipeline, working in coordination with the consolidated native Node.js
+ * Dice services (diceSession.service, diceSearch.service, and diceRoutes).
  */
 class DiceConnector extends BaseApplicationConnector {
   async initialize() {

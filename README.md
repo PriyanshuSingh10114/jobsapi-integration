@@ -298,74 +298,68 @@ API-->>Frontend: Display Jobs
 
 ## Clone Repository
 
+# 🚀 Unified 2-Application Architecture & Setup
+
+The platform is strictly consolidated into **two independent applications**:
+1. `frontend/` — Consolidated React 19 SPA featuring the primary Dice Obsidian Theme, faceted job search, automation center, and resume library.
+2. `backend/` — Consolidated Node.js / Express backend with native Playwright RPA, BullMQ workers, MongoDB persistence, and multi-ATS ingestion.
+
+---
+
+## 💻 Quickstart (Root Orchestration)
+
 ```bash
+# Clone the repository
 git clone https://github.com/PriyanshuSingh10114/jobsapi-test.git
+cd jobsapi-integration
 
-cd jobsapi
-```
+# Install dependencies
+cd backend && npm install && cd ../frontend && npm install && cd ..
 
----
+# Run all test suites & production checks
+npm test
 
-## Backend Setup
-
-```bash
-cd backend
-
-npm install
-```
-
-Create:
-
-```env
-PORT=5000
-
-MONGODB_URI=
-
-USAJOBS_API_KEY=
-
-USAJOBS_EMAIL=
-```
-
-Run:
-
-```bash
+# Start both applications concurrently
 npm run dev
+# OR use PowerShell: .\scripts\start-dev.ps1
+# OR use Bash: ./scripts/start-dev.sh
 ```
 
 ---
 
-## Frontend Setup
+## 🐳 Docker Compose (1 Backend, 1 Frontend)
 
 ```bash
-cd frontend
+# Build and start MongoDB, Redis, API Backend, and Frontend
+docker compose up -d --build
 
-npm install
-
-npm run dev
+# View container logs
+docker compose logs -f
 ```
 
 ---
 
-# 📡 API Endpoints
+## 📡 API Endpoints
 
-## Jobs
-
+### 1. Unified Job Search & Aggregation
 ```http
-GET /api/jobs/search
+GET /api/jobs/search?role=Developer&location=Remote&limit=20
+GET /api/stats
+POST /api/jobs/sync
 ```
 
-### Query Parameters
-
+### 2. Native Dice & Multi-ATS Automation
 ```http
-?page=
-?limit=
-?role=
-?location=
-?company=
-?jobType=
-?experienceLevel=
-?remote=
-?source=
+GET  /api/dice/health                   # Native Dice module health probe
+GET  /api/dice/dashboard/stats          # Real-time queue & apply metrics
+GET  /api/dice/settings/dice-status     # Dice session & cookie connection status
+POST /api/dice/settings/open-dice-login # Launches headed browser for login
+GET  /api/dice/resumes                  # Resume library & parsed skills
+POST /api/dice/resumes/upload           # Multi-file resume upload & parsing
+GET  /api/dice/search-profiles          # Automation search profiles
+POST /api/dice/search-profiles/:id/run  # Execute Dice scraping & job ingestion
+GET  /api/dice/review-queue             # Human-in-the-loop screener questions
+POST /api/dice/applications/queue       # Enqueue automated 1-click application
 ```
 
 ---
