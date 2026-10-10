@@ -1,22 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bookmark, Compass, Trash2, ArrowRight } from 'lucide-react';
+import { Bookmark, Trash2 } from 'lucide-react';
 import { JobCard } from '../components/jobs/JobCard';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Button } from '../components/ui/Button';
 
 export const SavedJobsPage = () => {
   const navigate = useNavigate();
-  const [savedJobs, setSavedJobs] = useState([]);
-
-  useEffect(() => {
+  const [savedJobs, setSavedJobs] = useState(() => {
     try {
-      const stored = JSON.parse(localStorage.getItem('jobsapi_saved_jobs') || '[]');
-      setSavedJobs(stored);
+      return JSON.parse(localStorage.getItem('jobsapi_saved_jobs') || '[]');
     } catch {
-      setSavedJobs([]);
+      return [];
     }
-  }, []);
+  });
 
   const handleRemoveAll = () => {
     localStorage.removeItem('jobsapi_saved_jobs');

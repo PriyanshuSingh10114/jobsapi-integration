@@ -38,5 +38,9 @@ RUN mkdir -p /app/resumes /app/data/browser_profiles /app/data/browser_profile \
 # Expose default port
 EXPOSE 8000
 
+# Healthcheck probe against FastAPI /health endpoint
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:8000/health || exit 1
+
 # 6. Start FastAPI using dynamic $PORT assigned by Render or container orchestrator
 CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

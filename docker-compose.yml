@@ -75,7 +75,7 @@ services:
     networks:
       - jobsapi-network
 
-  # 5. Frontend Single Page Application
+  # 5. JobsAPI Frontend Single Page Application
   frontend:
     build:
       context: ./frontend
@@ -89,6 +89,44 @@ services:
     networks:
       - jobsapi-network
 
+  # 6. Dice Automation Backend (Python / FastAPI / Playwright)
+  dice-backend:
+    build:
+      context: ./dice-automation-backend
+      dockerfile: Dockerfile
+    container_name: jobsapi_dice_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URL=mongodb://mongodb:27017
+      - DATABASE_NAME=dice_automation
+      - BROWSER_MODE=server
+      - HEADLESS=true
+      - BROWSER_DATA_DIR=/app/data/browser_profiles
+      - CORS_ORIGINS=*
+    depends_on:
+      - mongodb
+    volumes:
+      - dice-data:/app/data
+      - dice-resumes:/app/resumes
+    networks:
+      - jobsapi-network
+
+  # 7. Dice Automation Frontend (React / TypeScript / Vite / Nginx)
+  dice-frontend:
+    build:
+      context: ./dice-automation-frontend
+      dockerfile: Dockerfile
+    container_name: jobsapi_dice_frontend
+    restart: unless-stopped
+    ports:
+      - "5174:80"
+    depends_on:
+      - dice-backend
+    networks:
+      - jobsapi-network
+
 networks:
   jobsapi-network:
     driver: bridge
@@ -97,3 +135,5 @@ volumes:
   mongo-data:
   redis-data:
   upload-data:
+  dice-data:
+  dice-resumes:

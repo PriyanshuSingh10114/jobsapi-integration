@@ -1,0 +1,24 @@
+# ==========================================
+# JobsAPI Integration Monorepo .dockerignore
+# ==========================================
+
+**/.git
+**/.gitignore
+**/.vscode
+**/node_modules
+**/.venv
+**/venv
+**/__pycache__
+**/*.py[cod]
+**/dist
+**/build
+**/.next
+**/*.log
+**/.env
+**/.env.*
+!**/.env.example
+**/test-results
+**/playwright-report
+**/coverage
+**/data/browser_profiles
+**/.pytest_cache

@@ -5,6 +5,15 @@ const LocatorEngine = require('../../engine/LocatorEngine');
 const FieldFillEngine = require('../../engine/FieldFillEngine');
 const ValidationEngine = require('../../engine/ValidationEngine');
 
+/**
+ * DiceConnector (JobsAPI Universal RPA Connector)
+ * 
+ * ARCHITECTURAL NOTICE:
+ * This connector provides standard ATS interface compliance for generic Dice job URLs within
+ * the Node.js BullMQ worker pipeline. For advanced, dedicated Dice session management,
+ * multi-step application wizards, and CAPTCHA challenge resolution, the monorepo provides
+ * the specialized Python engine in `dice-automation-backend/` (FastAPI + DiceBoard.py).
+ */
 class DiceConnector extends BaseApplicationConnector {
   async initialize() {
     logger.info('[DiceConnector] Initializing Dice ATS plugin...');
