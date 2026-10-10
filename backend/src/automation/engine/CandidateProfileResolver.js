@@ -1,0 +1,244 @@
+const fs = require('fs').promises;
+const path = require('path');
+const UserProfile = require('../../models/UserProfile');
+const UCKGraph = require('../../models/UCKGraph');
+const logger = require('../../config/logger');
+
+class CandidateProfileResolver {
+  /**
+   * Fetches the raw profile from MongoDB (checking UCKGraph first, then UserProfile),
+   * normalizes it into a strictly typed CandidateProfile, and validates uploaded assets.
+   * @param {string} userId - The Clerk userId
+   * @returns {Promise<Object>} Normalized CandidateProfile
+   */
+  static async fetchAndNormalize(userId) {
+    logger.info(`CandidateProfileResolver: Fetching profile for ${userId}`);
+    
+    let profile = await UCKGraph.findOne({ userId });
+    if (!profile) {
+      profile = await UserProfile.findOne({ userId });
+    }
+    if (!profile) {
+      throw new Error('Profile not found. Please complete Profile Studio.');
+    }
+
+    const raw = profile.toObject();
+
+    logger.info('CandidateProfileResolver: Raw Mongo Document:', {
+      id: raw._id ? raw._id.toString() : userId,
+      rawKeys: Object.keys(raw),
+      hasBasicInfo: !!raw.basicInfo,
+      hasLocation: !!raw.location,
+      educationCount: raw.education?.length || 0,
+      experienceCount: raw.experience?.length || 0,
+      assetsCount: raw.assets?.length || 0
+    });
+
+    // PHASE 2: NORMALIZATION
+    const normalized = {
+      personal: {
+        firstName: raw.identity?.firstName || raw.basicInfo?.firstName || raw.firstName || '',
+        middleName: raw.identity?.middleName || raw.basicInfo?.middleName || '',
+        lastName: raw.identity?.lastName || raw.basicInfo?.lastName || raw.lastName || '',
+        preferredName: raw.identity?.preferredName || raw.basicInfo?.preferredName || raw.firstName || '',
+        dob: raw.identity?.dateOfBirth || raw.basicInfo?.dob || '',
+        pronouns: raw.identity?.pronouns || raw.basicInfo?.pronouns || ''
+      },
+      contact: {
+        email: raw.basicInfo?.email || raw.email || '',
+        secondaryEmail: raw.basicInfo?.secondaryEmail || '',
+        phone: raw.basicInfo?.phone || raw.phone || '',
+        countryCode: raw.basicInfo?.countryCode || ''
+      },
+      location: {
+        country: raw.location?.country || '',
+        state: raw.location?.state || '',
+        city: raw.location?.city || '',
+        address: raw.location?.address || '',
+        zipCode: raw.location?.zipCode || '',
+        willingToRelocate: raw.location?.willingToRelocate || false
+      },
+      // Map institution to school, cgpa to gpa
+      education: (raw.education || []).map(edu => ({
+        school: edu.institution || '',
+        degree: edu.degree || '',
+        discipline: edu.major || '',
+        gpa: edu.cgpa || '',
+        graduationDate: edu.graduationDate || ''
+      })).sort((a, b) => new Date(b.graduationDate || 0) - new Date(a.graduationDate || 0)),
+      experience: (raw.experience || []).map(exp => ({
+        company: exp.company || '',
+        title: exp.role || '',
+        startDate: exp.startDate || '',
+        endDate: exp.endDate || '',
+        responsibilities: exp.responsibilities || '',
+        technologies: exp.technologies || []
+      })).sort((a, b) => new Date(b.endDate || Date.now()) - new Date(a.endDate || Date.now())),
+      projects: raw.projects || [],
+      skills: raw.skills || {},
+      certifications: raw.certifications || [],
+      workAuthorization: {
+        authorized: raw.workAuthorization?.visa || raw.workAuthorization?.citizen || false,
+        requiresSponsorship: raw.workAuthorization?.needSponsorship || false,
+        country: raw.workAuthorization?.country || ''
+      },
+      preferences: raw.preferences || {},
+      demographics: raw.demographic || {},
+      links: {
+          linkedin: raw.links?.linkedin || raw.linkedin || '',
+          github: raw.links?.github || raw.github || '',
+          portfolio: raw.links?.portfolio || raw.portfolio || '',
+          personalWebsite: raw.links?.personalWebsite || '',
+          kaggle: raw.links?.kaggle || '',
+          medium: raw.links?.medium || '',
+          devto: raw.links?.devto || '',
+          stackoverflow: raw.links?.stackoverflow || '',
+          behance: raw.links?.behance || '',
+          dribbble: raw.links?.dribbble || '',
+          googleScholar: raw.links?.googleScholar || '',
+          orcid: raw.links?.orcid || ''
+      },
+      answers: raw.answerBank || {},
+      documents: {
+        defaultResume: null,
+        resumes: [],
+        coverLetters: []
+      }
+    };
+
+    // Trace missing profile paths
+    const checkPath = (objPath, value) => {
+      if (!value || (Array.isArray(value) && value.length === 0)) {
+        logger.warn(`CandidateProfileResolver: Missing profile attribute path: '${objPath}'`);
+      }
+    };
+
+    checkPath('personal.firstName', normalized.personal.firstName);
+    checkPath('personal.lastName', normalized.personal.lastName);
+    checkPath('contact.email', normalized.contact.email);
+    checkPath('contact.phone', normalized.contact.phone);
+    checkPath('location.city', normalized.location.city);
+    checkPath('location.country', normalized.location.country);
+    checkPath('links.linkedin', normalized.links.linkedin);
+    checkPath('education', normalized.education);
+    checkPath('experience', normalized.experience);
+
+    // PHASE 3 & 8: DOCUMENT RESOLUTION & VERIFICATION
+    logger.info('CandidateProfileResolver: Resolving and verifying documents...');
+    const assets = raw.assets || [];
+    for (const asset of assets) {
+      if (!asset.filePath) continue;
+
+      // Verify physical file exists
+      try {
+        await fs.access(asset.filePath);
+        const docRecord = {
+          id: asset._id ? asset._id.toString() : 'unknown',
+          filename: asset.name || path.basename(asset.filePath),
+          storagePath: asset.filePath,
+          atsScore: asset.atsScore || 0
+        };
+
+        if (asset.isCoverLetter) {
+          normalized.documents.coverLetters.push(docRecord);
+        } else if (!asset.isPortfolio && !asset.isCertificate) {
+          normalized.documents.resumes.push(docRecord);
+        }
+      } catch (err) {
+        logger.error(`Document Verification Failed: File not found on disk at ${asset.filePath}. Removing from automation cache.`);
+      }
+    }
+    
+    // Fallback to legacy root resumePath if no assets were found
+    if (normalized.documents.resumes.length === 0 && raw.resumePath) {
+        try {
+            await fs.access(raw.resumePath, fs.constants.R_OK);
+            normalized.documents.resumes.push({
+                id: 'legacy-root',
+                filename: path.basename(raw.resumePath),
+                storagePath: raw.resumePath,
+                atsScore: 0
+            });
+            logger.info('CandidateProfileResolver: Successfully mapped legacy root resumePath.');
+        } catch(e) {
+            logger.warn(`Legacy resumePath ${raw.resumePath} was unreadable.`);
+        }
+    }
+
+    // Sort resumes by ATS score descending and pick default
+    if (normalized.documents.resumes.length > 0) {
+      normalized.documents.resumes.sort((a, b) => b.atsScore - a.atsScore);
+      normalized.documents.defaultResume = normalized.documents.resumes[0].storagePath;
+    } else {
+      checkPath('documents.defaultResume', null);
+    }
+
+    logger.info('CandidateProfileResolver: Normalization complete.', {
+      firstName: normalized.personal.firstName,
+      lastName: normalized.personal.lastName,
+      email: normalized.contact.email,
+      phone: normalized.contact.phone,
+      educationCount: normalized.education.length,
+      experienceCount: normalized.experience.length,
+      defaultResume: normalized.documents.defaultResume
+    });
+
+    return normalized;
+  }
+
+  /**
+   * Validates that the normalized profile meets minimum requirements for automation.
+   * @param {Object} profile - Normalized profile
+   * @returns {Object} ValidationReport { canContinue, criticalErrors, warnings, completion }
+   */
+  static validate(profile) {
+    const criticalErrors = [];
+    const warnings = [];
+    const completenessReport = [];
+    let filledFields = 0;
+    const totalExpectedFields = 10;
+
+    const checkField = (name, isValid, isCritical) => {
+        completenessReport.push({ field: name, complete: isValid });
+        if (isValid) {
+            filledFields++;
+        } else {
+            if (isCritical) criticalErrors.push(name);
+            else warnings.push(name);
+        }
+    };
+
+    // Critical Errors (Must stop automation)
+    checkField('Email', !!profile.contact.email, true);
+    checkField('Full Name', !!(profile.personal.firstName && profile.personal.lastName), true);
+    checkField('Resume', !!profile.documents.defaultResume, true);
+
+    // Warnings (Can continue automation)
+    checkField('Phone', !!profile.contact.phone, false);
+    checkField('LinkedIn URL', !!profile.links.linkedin, false);
+    checkField('Portfolio URL', !!profile.links.portfolio, false);
+    checkField('Country', !!profile.location.country, false);
+    checkField('City', !!profile.location.city, false);
+    checkField('Education', profile.education.length > 0, false);
+    checkField('Experience', profile.experience.length > 0, false);
+    
+    // Additional Optional
+    if (profile.documents.coverLetters.length > 0) {
+        completenessReport.push({ field: 'Cover Letter', complete: true });
+    } else {
+        completenessReport.push({ field: 'Cover Letter', complete: false });
+    }
+
+    const completion = Math.round((filledFields / totalExpectedFields) * 100);
+
+    return {
+      canContinue: criticalErrors.length === 0,
+      criticalErrors,
+      warnings,
+      completion,
+      completenessReport
+    };
+  }
+}
+
+module.exports = CandidateProfileResolver;
