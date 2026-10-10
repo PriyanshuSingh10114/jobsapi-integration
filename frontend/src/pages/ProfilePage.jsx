@@ -18,29 +18,53 @@ import {
   MapPin,
   Calendar,
   Layers,
-  Sliders
+  Sliders,
+  Search,
+  RotateCw
 } from 'lucide-react';
 import {
   fetchCandidateProfile,
   updateCandidateProfile,
   uploadCandidateDocument,
-  fetchCandidateReadiness,
   addExperience,
   deleteExperience,
   addEducation,
   deleteEducation
 } from '../services/api';
+import {
+  fetchDiceResumes,
+  uploadDiceResumes,
+  reparseDiceResume,
+  deleteDiceResume
+} from '../services/diceApi';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Badge } from '../components/ui/Badge';
 import { extractSkillList } from '../utils/skills';
 
-export const ProfilePage = () => {
+export const ProfilePage = ({ initialTab = 'identity' }) => {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState('identity');
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [resumeUploadSuccess, setResumeUploadSuccess] = useState(false);
   const [uploadError, setUploadError] = useState(null);
+
+  // Dice Resumes State
+  const [diceSearch, setDiceSearch] = useState('');
+  const [diceRoleFilter, setDiceRoleFilter] = useState('');
+  const [diceUploadProgress, setDiceUploadProgress] = useState(null);
+  const [isUploadingDice, setIsUploadingDice] = useState(false);
+  const [reparsingId, setReparsingId] = useState(null);
+
+  const {
+    data: diceResumes = [],
+    isLoading: isDiceResumesLoading,
+    refetch: refetchDiceResumes
+  } = useQuery({
+    queryKey: ['diceResumes', diceSearch, diceRoleFilter],
+    queryFn: () => fetchDiceResumes(diceSearch, diceRoleFilter),
+    staleTime: 30000,
+  });
 
   // Experience modal/inline form
   const [showAddExp, setShowAddExp] = useState(false);
@@ -122,46 +146,48 @@ export const ProfilePage = () => {
   useEffect(() => {
     if (profile) {
       const skills = extractSkillList(profile.professionalProfile?.skills || profile.skills);
-      setFormData({
-        identity: {
-          firstName: profile.identity?.firstName || '',
-          middleName: profile.identity?.middleName || '',
-          lastName: profile.identity?.lastName || '',
-          preferredName: profile.identity?.preferredName || '',
-          email: profile.identity?.email || '',
-          phone: profile.identity?.phone || '',
-        },
-        location: {
-          addressLine1: profile.location?.addressLine1 || '',
-          city: profile.location?.city || '',
-          state: profile.location?.state || '',
-          postalCode: profile.location?.postalCode || '',
-          country: profile.location?.country || 'United States',
-        },
-        contact: {
-          linkedinUrl: profile.contact?.linkedinUrl || '',
-          githubUrl: profile.contact?.githubUrl || '',
-          portfolioUrl: profile.contact?.portfolioUrl || '',
-          personalWebsite: profile.contact?.personalWebsite || '',
-        },
-        professionalProfile: {
-          currentTitle: profile.professionalProfile?.currentTitle || '',
-          professionalSummary: profile.professionalProfile?.professionalSummary || '',
-          yearsOfExperience: profile.professionalProfile?.yearsOfExperience || 5,
-          skills: skills.length > 0 ? skills : ['AWS', 'Docker', 'Kubernetes', 'TypeScript', 'Node.js', 'Python', 'React'],
-        },
-        workAuthorization: {
-          authorizedToWorkInUS: profile.workAuthorization?.authorizedToWorkInUS ?? true,
-          requiresSponsorshipNow: profile.workAuthorization?.requiresSponsorshipNow ?? false,
-          requiresFutureSponsorship: profile.workAuthorization?.requiresFutureSponsorship ?? false,
-          visaType: profile.workAuthorization?.visaType || 'Citizen',
-        },
-        preferences: {
-          desiredTitles: profile.preferences?.desiredTitles || [],
-          minimumSalary: profile.preferences?.minimumSalary || 140000,
-          workModes: profile.preferences?.workModes || ['remote'],
-          blockedCompanies: profile.preferences?.blockedCompanies || [],
-        }
+      queueMicrotask(() => {
+        setFormData({
+          identity: {
+            firstName: profile.identity?.firstName || '',
+            middleName: profile.identity?.middleName || '',
+            lastName: profile.identity?.lastName || '',
+            preferredName: profile.identity?.preferredName || '',
+            email: profile.identity?.email || '',
+            phone: profile.identity?.phone || '',
+          },
+          location: {
+            addressLine1: profile.location?.addressLine1 || '',
+            city: profile.location?.city || '',
+            state: profile.location?.state || '',
+            postalCode: profile.location?.postalCode || '',
+            country: profile.location?.country || 'United States',
+          },
+          contact: {
+            linkedinUrl: profile.contact?.linkedinUrl || '',
+            githubUrl: profile.contact?.githubUrl || '',
+            portfolioUrl: profile.contact?.portfolioUrl || '',
+            personalWebsite: profile.contact?.personalWebsite || '',
+          },
+          professionalProfile: {
+            currentTitle: profile.professionalProfile?.currentTitle || '',
+            professionalSummary: profile.professionalProfile?.professionalSummary || '',
+            yearsOfExperience: profile.professionalProfile?.yearsOfExperience || 5,
+            skills: skills.length > 0 ? skills : ['AWS', 'Docker', 'Kubernetes', 'TypeScript', 'Node.js', 'Python', 'React'],
+          },
+          workAuthorization: {
+            authorizedToWorkInUS: profile.workAuthorization?.authorizedToWorkInUS ?? true,
+            requiresSponsorshipNow: profile.workAuthorization?.requiresSponsorshipNow ?? false,
+            requiresFutureSponsorship: profile.workAuthorization?.requiresFutureSponsorship ?? false,
+            visaType: profile.workAuthorization?.visaType || 'Citizen',
+          },
+          preferences: {
+            desiredTitles: profile.preferences?.desiredTitles || [],
+            minimumSalary: profile.preferences?.minimumSalary || 140000,
+            workModes: profile.preferences?.workModes || ['remote'],
+            blockedCompanies: profile.preferences?.blockedCompanies || [],
+          }
+        });
       });
     }
   }, [profile]);
@@ -255,6 +281,46 @@ export const ProfilePage = () => {
   const handleDeleteEducation = async (id) => {
     await deleteEducation(id);
     queryClient.invalidateQueries({ queryKey: ['candidateProfile'] });
+  };
+
+  const handleUploadDiceFiles = async (e) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setIsUploadingDice(true);
+    setDiceUploadProgress(10);
+    try {
+      await uploadDiceResumes(files, (progress) => {
+        setDiceUploadProgress(progress);
+      });
+      refetchDiceResumes();
+    } catch (err) {
+      alert(`Resume upload failed: ${err.message}`);
+    } finally {
+      setIsUploadingDice(false);
+      setDiceUploadProgress(null);
+    }
+  };
+
+  const handleReparseDiceResume = async (id) => {
+    setReparsingId(id);
+    try {
+      await reparseDiceResume(id);
+      refetchDiceResumes();
+    } catch (err) {
+      alert(`Reparse failed: ${err.message}`);
+    } finally {
+      setReparsingId(null);
+    }
+  };
+
+  const handleDeleteDiceResume = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this resume?')) return;
+    try {
+      await deleteDiceResume(id);
+      refetchDiceResumes();
+    } catch (err) {
+      alert(`Delete failed: ${err.message}`);
+    }
   };
 
   const readinessScore = readiness?.overallScore || 92;
@@ -393,6 +459,7 @@ export const ProfilePage = () => {
           <div className="flex items-center gap-2 border-b border-border-warm pb-px overflow-x-auto">
             {[
               { id: 'identity', label: 'Identity & Location', icon: User },
+              { id: 'resumes', label: 'Resume Library (Dice)', icon: FileText },
               { id: 'experience', label: 'Work Experience', icon: Briefcase },
               { id: 'education', label: 'Education', icon: GraduationCap },
               { id: 'skills', label: 'Skills & Tech Stack', icon: Sparkles },
@@ -519,6 +586,168 @@ export const ProfilePage = () => {
                   placeholder="https://github.com/username"
                 />
               </div>
+            </div>
+          )}
+
+          {/* Tab: Resume Library (Dice) */}
+          {activeTab === 'resumes' && (
+            <div className="card-warm p-6 sm:p-8 bg-surface space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border-warm">
+                <div>
+                  <h2 className="text-base font-bold text-charcoal flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-indigo-600" />
+                    <span>Resume Library & Parser Vault</span>
+                  </h2>
+                  <p className="text-xs text-charcoal-muted mt-0.5">
+                    Resumes parsed and ready for Dice automated matching and Playwright autofill.
+                  </p>
+                </div>
+
+                {/* Upload Button */}
+                <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] hover:from-[#4F46E5] hover:to-[#7C3AED] text-white shadow-[0_4px_12px_rgba(99,102,241,0.25)] transition-all">
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>{isUploadingDice ? 'Uploading...' : 'Upload Resumes'}</span>
+                  <input
+                    type="file"
+                    multiple
+                    accept=".pdf,.docx,.doc"
+                    className="hidden"
+                    disabled={isUploadingDice}
+                    onChange={handleUploadDiceFiles}
+                  />
+                </label>
+              </div>
+
+              {/* Upload Progress Bar if active */}
+              {isUploadingDice && (
+                <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-200 text-xs space-y-1.5">
+                  <div className="flex justify-between font-bold text-indigo-700">
+                    <span>Uploading & Parsing Resume Documents...</span>
+                    <span>{diceUploadProgress || 45}%</span>
+                  </div>
+                  <div className="w-full bg-indigo-200 h-2 rounded-full overflow-hidden">
+                    <div
+                      className="bg-indigo-600 h-full transition-all duration-300"
+                      style={{ width: `${diceUploadProgress || 45}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Filters */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1 relative">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search resumes by keyword, skill, or role..."
+                    value={diceSearch}
+                    onChange={(e) => setDiceSearch(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-surface-soft border border-border-warm focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Filter by target role..."
+                  value={diceRoleFilter}
+                  onChange={(e) => setDiceRoleFilter(e.target.value)}
+                  className="sm:w-48 px-3 py-2 text-xs rounded-xl bg-surface-soft border border-border-warm focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              {/* Resumes List */}
+              {isDiceResumesLoading ? (
+                <div className="p-12 text-center text-xs text-charcoal-muted animate-pulse">
+                  Loading resume library...
+                </div>
+              ) : diceResumes.length === 0 ? (
+                <div className="p-10 text-center rounded-xl bg-surface-soft border border-border-warm space-y-3">
+                  <FileText className="w-8 h-8 text-indigo-400 mx-auto" />
+                  <h4 className="text-sm font-bold text-charcoal">No Resumes Found</h4>
+                  <p className="text-xs text-charcoal-muted max-w-sm mx-auto">
+                    Upload your first resume in PDF or DOCX format to populate parsed skills, target roles, and executive summaries.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {diceResumes.map((resume) => (
+                    <div
+                      key={resume.id || resume._id}
+                      className="p-5 rounded-xl bg-surface border border-slate-200/90 shadow-sm space-y-3.5 hover:border-indigo-400/50 transition-all"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm font-bold text-charcoal">
+                              {resume.display_name || resume.filename || 'Resume Document'}
+                            </h4>
+                            {resume.target_role && (
+                              <Badge variant="brand" size="xs">
+                                {resume.target_role}
+                              </Badge>
+                            )}
+                            {resume.years_of_experience && (
+                              <Badge variant="neutral" size="xs">
+                                {resume.years_of_experience} YOE
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-[11px] text-charcoal-muted mt-0.5">
+                            File: {resume.filename} • {resume.uploaded_at ? new Date(resume.uploaded_at).toLocaleDateString() : 'Active'}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs font-semibold text-indigo-600 hover:bg-indigo-50"
+                            isLoading={reparsingId === (resume.id || resume._id)}
+                            onClick={() => handleReparseDiceResume(resume.id || resume._id)}
+                            icon={RotateCw}
+                          >
+                            Reparse
+                          </Button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteDiceResume(resume.id || resume._id)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                            title="Delete resume"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Summary */}
+                      {resume.summary && (
+                        <p className="text-xs text-charcoal-light leading-relaxed line-clamp-2">
+                          {resume.summary}
+                        </p>
+                      )}
+
+                      {/* Skills */}
+                      {resume.skills && resume.skills.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {resume.skills.slice(0, 10).map((s) => (
+                            <span
+                              key={s}
+                              className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200"
+                            >
+                              {s}
+                            </span>
+                          ))}
+                          {resume.skills.length > 10 && (
+                            <span className="text-[10px] font-medium text-slate-400 self-center">
+                              +{resume.skills.length - 10} more
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

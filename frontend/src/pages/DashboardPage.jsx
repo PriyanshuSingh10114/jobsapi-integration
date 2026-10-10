@@ -8,15 +8,15 @@ import JobSearch from '../components/Dashboard/JobSearch';
 import JobListing from '../components/Dashboard/JobListing';
 
 const DashboardPage = () => {
-  const [searchParams, setSearchParams] = useState(null);
-  const [isSearching, setIsSearching] = useState(false);
-
-  useEffect(() => {
-    const saved = localStorage.getItem('jobFilters');
-    if (saved) {
-      setSearchParams(JSON.parse(saved));
+  const [searchParams, setSearchParams] = useState(() => {
+    try {
+      const saved = localStorage.getItem('jobFilters');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
     }
-  }, []);
+  });
+  const [isSearching, setIsSearching] = useState(false);
 
   const handleSearch = (params) => {
     setSearchParams(params);

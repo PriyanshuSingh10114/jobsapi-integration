@@ -1,12 +1,24 @@
-import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
-import { Menu, Search, Bell, Sparkles, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, Search, Sparkles, RefreshCw, CheckCircle2, AlertCircle, Zap } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { ThemeToggle } from '../ui/ThemeToggle';
+import { fetchDiceStatus } from '../../services/diceApi';
 
 export const TopBar = ({ onOpenMobileMenu, onOpenCommandPalette }) => {
   const queryClient = useQueryClient();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [diceSession, setDiceSession] = useState({ is_connected: false, username: '' });
+
+  useEffect(() => {
+    fetchDiceStatus(false)
+      .then((status) => {
+        setDiceSession(status || { is_connected: false });
+      })
+      .catch(() => setDiceSession({ is_connected: false }));
+  }, []);
 
   const handleRefreshAll = async () => {
     setIsRefreshing(true);
@@ -14,62 +26,99 @@ export const TopBar = ({ onOpenMobileMenu, onOpenCommandPalette }) => {
     setTimeout(() => setIsRefreshing(false), 600);
   };
 
+  // Get human friendly page title
+  const getPageTitle = (pathname) => {
+    if (pathname === '/') return 'Dashboard';
+    if (pathname.startsWith('/jobs')) return 'All Jobs & Discovery';
+    if (pathname.startsWith('/automation') || pathname.startsWith('/auto-apply')) return 'Automation Center';
+    if (pathname.startsWith('/applications')) return 'My Applications';
+    if (pathname.startsWith('/saved')) return 'Saved Jobs';
+    if (pathname.startsWith('/profile')) return 'Profile & Resumes';
+    if (pathname.startsWith('/settings')) return 'Integrations & Settings';
+    return 'Workspace';
+  };
+
   return (
-    <header className="h-16 bg-surface/80 backdrop-blur-md border-b border-border-warm sticky top-0 z-30 px-4 sm:px-6 flex items-center justify-between gap-4">
-      {/* Mobile Menu trigger & quick title */}
-      <div className="flex items-center gap-3 md:hidden">
+    <header className="h-16 bg-surface/90 backdrop-blur-md border-b border-border-warm sticky top-0 z-30 px-4 sm:px-6 flex items-center justify-between gap-4">
+      {/* Mobile Menu trigger & title */}
+      <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={onOpenMobileMenu}
-          className="p-2 rounded-lg text-charcoal hover:bg-surface-soft border border-border-warm"
+          className="p-2 rounded-lg text-charcoal hover:bg-surface-soft border border-border-warm md:hidden"
           aria-label="Open navigation menu"
         >
           <Menu className="w-5 h-5" />
         </button>
-        <span className="font-serif font-bold text-lg text-charcoal tracking-tight">
-          JobsAPI
-        </span>
+        <div>
+          <h1 className="font-sans font-extrabold text-base sm:text-lg text-charcoal tracking-tight leading-tight">
+            {getPageTitle(location.pathname)}
+          </h1>
+          <p className="text-[11px] text-charcoal-muted hidden lg:block leading-none mt-0.5">
+            Dice UI Automation Engine & Multi-ATS Application Platform
+          </p>
+        </div>
       </div>
 
       {/* Global Search Button (acts as Command Palette trigger) */}
-      <div className="flex-1 max-w-xl hidden md:block">
+      <div className="flex-1 max-w-md hidden md:block">
         <button
           type="button"
           onClick={onOpenCommandPalette}
-          className="w-full bg-surface-soft/80 hover:bg-surface-soft border border-border-warm rounded-xl px-3.5 py-2 text-xs text-charcoal-muted flex items-center justify-between transition-all group cursor-pointer shadow-2xs hover:border-brand-secondary/40"
+          className="w-full bg-surface-soft/80 hover:bg-surface-soft border border-border-warm rounded-xl px-3.5 py-1.5 text-xs text-charcoal-muted flex items-center justify-between transition-all group cursor-pointer shadow-2xs hover:border-brand-secondary/40"
         >
-          <div className="flex items-center gap-2.5">
-            <Search className="w-4 h-4 text-charcoal-muted group-hover:text-charcoal transition-colors" />
-            <span className="text-charcoal-muted/80 group-hover:text-charcoal transition-colors">
-              Search jobs, companies, skills, or run command...
+          <div className="flex items-center gap-2">
+            <Search className="w-3.5 h-3.5 text-charcoal-muted group-hover:text-charcoal transition-colors" />
+            <span className="text-charcoal-muted/80 group-hover:text-charcoal transition-colors truncate">
+              Search jobs, profiles, automation...
             </span>
           </div>
-          <div className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium text-charcoal-muted bg-surface border border-border-warm rounded">
+          <div className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold text-charcoal-muted bg-surface border border-border-warm rounded">
             <span>⌘</span>
             <span>K</span>
           </div>
         </button>
       </div>
 
-      {/* Right Actions */}
-      <div className="flex items-center gap-2.5">
-        {/* Mobile search button */}
+      {/* Right Actions & Dice UI Status Chips */}
+      <div className="flex items-center gap-2 sm:gap-2.5">
+        {/* Dice Session Status Badge */}
         <button
           type="button"
-          onClick={onOpenCommandPalette}
-          className="md:hidden p-2 rounded-lg text-charcoal-muted hover:text-charcoal hover:bg-surface-soft border border-border-warm"
-          aria-label="Search"
+          onClick={() => navigate('/settings')}
+          className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${
+            diceSession.is_connected
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+              : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
+          }`}
+          title={diceSession.is_connected ? `Connected: ${diceSession.username || 'Dice User'}` : 'Click Settings to sign into Dice'}
         >
-          <Search className="w-4 h-4" />
+          {diceSession.is_connected ? (
+            <>
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+              <span>{diceSession.username ? `Dice: ${diceSession.username}` : 'Dice: Connected'}</span>
+            </>
+          ) : (
+            <>
+              <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+              <span>Dice: Sign In</span>
+            </>
+          )}
         </button>
+
+        {/* Playwright Engine Badge */}
+        <div className="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+          <Zap className="w-3.5 h-3.5 text-indigo-600" />
+          <span>Playwright Engine Ready</span>
+        </div>
 
         {/* Global Refresh Button */}
         <button
           type="button"
           onClick={handleRefreshAll}
           disabled={isRefreshing}
-          className="p-2 rounded-lg text-charcoal-muted hover:text-charcoal hover:bg-surface-soft border border-border-warm/60 transition-all cursor-pointer"
-          title="Refresh workspace feeds & data"
+          className="p-1.5 rounded-lg text-charcoal-muted hover:text-charcoal hover:bg-surface-soft border border-border-warm/60 transition-all cursor-pointer"
+          title="Refresh workspace data"
           aria-label="Refresh workspace"
         >
           <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-brand-primary' : ''}`} />
@@ -77,23 +126,13 @@ export const TopBar = ({ onOpenMobileMenu, onOpenCommandPalette }) => {
 
         <ThemeToggle />
 
-
-        {/* Quick AutoApply CTA */}
-        <NavLink
-          to="/auto-apply"
-          className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-brand-subtle text-brand-primary border border-brand-secondary/30 hover:bg-brand-primary hover:text-white transition-all shadow-2xs"
-        >
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Auto Apply</span>
-        </NavLink>
-
         {/* Candidate Avatar & Profile link */}
         <NavLink
           to="/profile"
-          className="flex items-center gap-2.5 pl-2 pr-1.5 py-1 rounded-xl hover:bg-surface-soft transition-colors"
-          title="Candidate Profile"
+          className="flex items-center gap-2 pl-1 pr-1.5 py-1 rounded-xl hover:bg-surface-soft transition-colors"
+          title="Candidate Profile & Resumes"
         >
-          <div className="w-8 h-8 rounded-full bg-brand-primary text-white flex items-center justify-center text-xs font-semibold border border-brand-secondary/30 shadow-warm-sm">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] text-white flex items-center justify-center text-xs font-bold border border-white/20 shadow-sm">
             CP
           </div>
         </NavLink>

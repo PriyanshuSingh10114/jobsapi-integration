@@ -36,11 +36,15 @@ function App() {
         <Route path="/" element={<AppShell />}>
           <Route index element={<OverviewPage />} />
           <Route path="discover" element={<DiscoverPage />} />
+          <Route path="jobs" element={<DiscoverPage />} />
           <Route path="jobs/:id" element={<JobDetailPage />} />
           <Route path="saved" element={<SavedJobsPage />} />
           <Route path="applications" element={<ApplicationsPage />} />
           <Route path="applications/:id" element={<ApplicationDetailPage />} />
           <Route path="auto-apply" element={<AutoApplyPage />} />
+          <Route path="automation" element={<AutoApplyPage />} />
+          <Route path="review" element={<AutoApplyPage initialTab="review" />} />
+          <Route path="resumes" element={<ProfilePage initialTab="resumes" />} />
           <Route path="insights" element={<InsightsPage />} />
           <Route path="insights/skills" element={<SkillTrendsPage />} />
           <Route path="insights/sources" element={<SourceHealthPage />} />
