@@ -257,14 +257,14 @@ export const AutoApplyPage = ({ initialTab = 'queue' }) => {
           onClick={() => setActiveTab('queue')}
           className={`px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
             activeTab === 'queue'
-              ? 'border-[#6366F1] text-[#6366F1]'
+              ? 'border-emerald-600 text-emerald-600'
               : 'border-transparent text-charcoal-muted hover:text-charcoal'
           }`}
         >
           <Zap className="w-4 h-4" />
           <span>Automation Queue</span>
           {queueStatus?.queued_count > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-100 text-indigo-700">
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800">
               {queueStatus.queued_count}
             </span>
           )}
@@ -275,7 +275,7 @@ export const AutoApplyPage = ({ initialTab = 'queue' }) => {
           onClick={() => setActiveTab('review')}
           className={`px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
             activeTab === 'review'
-              ? 'border-[#6366F1] text-[#6366F1]'
+              ? 'border-emerald-600 text-emerald-600'
               : 'border-transparent text-charcoal-muted hover:text-charcoal'
           }`}
         >
@@ -293,7 +293,7 @@ export const AutoApplyPage = ({ initialTab = 'queue' }) => {
           onClick={() => setActiveTab('profiles')}
           className={`px-4 py-3 text-xs sm:text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer ${
             activeTab === 'profiles'
-              ? 'border-[#6366F1] text-[#6366F1]'
+              ? 'border-emerald-600 text-emerald-600'
               : 'border-transparent text-charcoal-muted hover:text-charcoal'
           }`}
         >
@@ -356,7 +356,7 @@ export const AutoApplyPage = ({ initialTab = 'queue' }) => {
           <div className="p-6 sm:p-8 rounded-xl bg-surface border border-slate-200/90 shadow-sm space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border-warm">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] text-white flex items-center justify-center font-bold shadow-[0_4px_16px_rgba(99,102,241,0.35)]">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center font-bold shadow-[0_4px_16px_rgba(16,185,129,0.35)]">
                   <Zap className="w-6 h-6 fill-current" />
                 </div>
                 <div>
@@ -377,7 +377,7 @@ export const AutoApplyPage = ({ initialTab = 'queue' }) => {
               <Button
                 variant="primary"
                 size="lg"
-                className="bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] hover:from-[#4F46E5] hover:to-[#7C3AED] text-white font-bold px-6 shadow-[0_4px_12px_rgba(99,102,241,0.25)]"
+                className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold px-6 shadow-[0_4px_12px_rgba(16,185,129,0.3)]"
                 isLoading={isCycleRunning}
                 onClick={handleRunCycle}
                 icon={Play}
@@ -572,7 +572,7 @@ export const AutoApplyPage = ({ initialTab = 'queue' }) => {
             <Button
               variant="primary"
               size="sm"
-              className="bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white font-bold"
+              className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold shadow-xs"
               onClick={() => setIsProfileModalOpen(true)}
               icon={Plus}
             >

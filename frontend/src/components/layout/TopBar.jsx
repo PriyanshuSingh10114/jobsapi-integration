@@ -107,8 +107,8 @@ export const TopBar = ({ onOpenMobileMenu, onOpenCommandPalette }) => {
         </button>
 
         {/* Playwright Engine Badge */}
-        <div className="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
-          <Zap className="w-3.5 h-3.5 text-indigo-600" />
+        <div className="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
+          <Zap className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
           <span>Playwright Engine Ready</span>
         </div>
 
@@ -132,7 +132,7 @@ export const TopBar = ({ onOpenMobileMenu, onOpenCommandPalette }) => {
           className="flex items-center gap-2 pl-1 pr-1.5 py-1 rounded-xl hover:bg-surface-soft transition-colors"
           title="Candidate Profile & Resumes"
         >
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] text-white flex items-center justify-center text-xs font-bold border border-white/20 shadow-sm">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center text-xs font-bold border border-white/20 shadow-sm">
             CP
           </div>
         </NavLink>

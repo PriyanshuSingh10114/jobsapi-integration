@@ -126,7 +126,7 @@ export const SettingsPage = () => {
         <div className="p-6 sm:p-8 rounded-xl bg-surface border border-slate-200/90 shadow-sm space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border-warm">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] text-white flex items-center justify-center font-bold shadow-[0_4px_16px_rgba(99,102,241,0.35)]">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center font-bold shadow-[0_4px_16px_rgba(16,185,129,0.35)]">
                 <Globe className="w-6 h-6" />
               </div>
               <div>
@@ -163,7 +163,7 @@ export const SettingsPage = () => {
                 type="button"
                 variant="primary"
                 size="sm"
-                className="bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white font-bold"
+                className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold shadow-xs"
                 isLoading={isLaunchingBrowser}
                 onClick={handleLaunchDiceBrowser}
                 icon={ExternalLink}
@@ -342,7 +342,7 @@ export const SettingsPage = () => {
             type="submit"
             variant="primary"
             size="md"
-            className="bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white font-bold px-6 shadow-[0_4px_12px_rgba(99,102,241,0.25)]"
+            className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold px-6 shadow-[0_4px_12px_rgba(16,185,129,0.3)]"
             icon={Save}
           >
             Save Settings

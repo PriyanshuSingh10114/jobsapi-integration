@@ -112,7 +112,7 @@ export const OverviewPage = () => {
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-3 max-w-2xl">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#6366F1]/30 border border-[#6366F1]/50 text-[#A5B4FC]">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/25 border border-emerald-400/40 text-emerald-300">
                 <Zap className="w-3.5 h-3.5 fill-current" />
                 Playwright RPA Engine Active
               </span>
@@ -137,7 +137,7 @@ export const OverviewPage = () => {
               <Button
                 variant="primary"
                 size="md"
-                className="bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] hover:from-[#4F46E5] hover:to-[#7C3AED] text-white font-bold px-5 shadow-[0_4px_16px_rgba(99,102,241,0.4)]"
+                className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold px-5 shadow-[0_4px_16px_rgba(16,185,129,0.35)]"
                 onClick={() => navigate('/automation')}
                 icon={Play}
               >
@@ -201,7 +201,7 @@ export const OverviewPage = () => {
             variant="primary"
             size="lg"
             onClick={() => handleSearch(searchQuery)}
-            className="w-full sm:w-auto px-6 bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white font-bold"
+            className="w-full sm:w-auto px-6 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold shadow-[0_4px_12px_rgba(16,185,129,0.3)]"
             icon={Compass}
           >
             Explore Jobs

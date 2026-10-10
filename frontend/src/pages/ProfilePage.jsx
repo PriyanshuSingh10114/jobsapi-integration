@@ -604,7 +604,7 @@ export const ProfilePage = ({ initialTab = 'identity' }) => {
                 </div>
 
                 {/* Upload Button */}
-                <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] hover:from-[#4F46E5] hover:to-[#7C3AED] text-white shadow-[0_4px_12px_rgba(99,102,241,0.25)] transition-all">
+                <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-[0_4px_12px_rgba(16,185,129,0.3)] transition-all">
                   <Upload className="w-3.5 h-3.5" />
                   <span>{isUploadingDice ? 'Uploading...' : 'Upload Resumes'}</span>
                   <input

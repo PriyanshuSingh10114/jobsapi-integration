@@ -183,7 +183,7 @@ export const ApplicationsPage = () => {
           <Button
             variant="primary"
             size="md"
-            className="bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white font-bold"
+            className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold shadow-xs"
             onClick={() => navigate('/automation')}
             icon={Sparkles}
           >

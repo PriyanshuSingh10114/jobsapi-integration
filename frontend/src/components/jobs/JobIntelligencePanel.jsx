@@ -96,7 +96,7 @@ export const JobIntelligencePanel = ({
       {/* Header */}
       <div className="flex items-center justify-between pb-4 border-b border-border-warm">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#6366F1] to-[#8B5CF6] text-white flex items-center justify-center shadow-[0_2px_10px_rgba(99,102,241,0.35)]">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-[0_2px_10px_rgba(16,185,129,0.35)]">
             <Sparkles className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -287,7 +287,7 @@ export const JobIntelligencePanel = ({
           <Button
             variant="primary"
             size="md"
-            className="w-full bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] hover:from-[#4F46E5] hover:to-[#7C3AED] text-white font-bold py-2.5 rounded-xl shadow-[0_4px_12px_rgba(99,102,241,0.25)]"
+            className="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold py-2.5 rounded-xl shadow-[0_4px_12px_rgba(16,185,129,0.3)]"
             isLoading={isApplying}
             onClick={handleTriggerAutoApply}
             icon={Zap}
